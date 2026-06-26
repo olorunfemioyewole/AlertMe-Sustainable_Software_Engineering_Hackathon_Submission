@@ -12,12 +12,12 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -37,12 +37,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               Text('Welcome Back', style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 8),
-              Text('Sign in to keep your community safe.', style: Theme.of(context).textTheme.bodyMedium),
+              // Adjusted copy to remain calm, accurate, and reassuring
+              Text('Sign in to access your community dashboard.', style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 32),
               TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(hintText: 'Email address'),
-                keyboardType: TextInputType.emailAddress,
+                controller: _phoneController,
+                decoration: const InputDecoration(hintText: 'Phone number'),
+                keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 12),
               TextField(
@@ -59,8 +60,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: authState.isLoading
                     ? null
                     : () {
+                  // Forwarding phone_number and password exclusively to matching endpoint schemas
                   ref.read(authProvider.notifier).login(
-                    _emailController.text.trim(),
+                    _phoneController.text.trim(),
                     _passwordController.text.trim(),
                   );
                 },

@@ -47,16 +47,7 @@ class SettingsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Email',
-                      style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      authState.email ?? 'Not Available',
-                      style: const TextStyle(color: AppTheme.text, fontSize: 15, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 16),
+                    // Email widgets block has been completely removed from here
                     const Text(
                       'Phone number',
                       style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
@@ -88,7 +79,7 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               const Center(
                 child: Text(
-                  'Alert Me v1.0.0',
+                  'Alert Me v1.0.0', // Keeping your current project tag intact
                   style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
                 ),
               ),
