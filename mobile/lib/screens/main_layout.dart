@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'feed_screen.dart'; // Import Phase 3 Screen
+import 'feed_screen.dart';
 import 'report_screen.dart';
-import 'app_navigation_mock.dart';
+import 'settings_screen.dart'; // Import Phase 4 Screen
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -16,9 +16,9 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      FeedScreen(onNavigateToReport: () => setState(() => _currentIndex = 1)), // Seamless cross-tab linking context CTA triggers
+      FeedScreen(onNavigateToReport: () => setState(() => _currentIndex = 1)),
       const ReportScreen(),
-      const MockSettingsScreen(),
+      const SettingsScreen(), // Replaced the final mock view with our live settings component
     ];
 
     return Scaffold(
