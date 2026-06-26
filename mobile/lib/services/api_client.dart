@@ -7,7 +7,7 @@ final secureStorageProvider = Provider((ref) => const FlutterSecureStorage());
 final apiClientProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://10.0.2.2:8001', // Standard Android Emulator loopback pointing to port 8001
+      baseUrl: 'http://localhost:8001', // Standard Android Emulator loopback pointing to port 8001
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 5),
       headers: {'Content-Type': 'application/json'},

@@ -8,7 +8,7 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Read the active state to handle loading indicators during session changes
+    // Read the active profile state data fields dynamically
     final authState = ref.watch(authProvider);
 
     return Scaffold(
@@ -48,12 +48,22 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Routing Account Identifier',
+                      'Routing Account Email',
                       style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'test@example.com', // Explicit session tracking parameter
+                      authState.email ?? 'Not Available',
+                      style: const TextStyle(color: AppTheme.text, fontSize: 15, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Verified Mobile Number',
+                      style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      authState.phoneNumber ?? 'Not Available',
                       style: const TextStyle(color: AppTheme.text, fontSize: 15, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 16),
@@ -83,12 +93,12 @@ class SettingsScreen extends ConsumerWidget {
                   foregroundColor: AppTheme.error,
                   side: const BorderSide(color: AppTheme.borders),
                 ),
-                child: const Text('Evacuate Session Keys'),
+                child: const Text('Logout'),
               ),
               const SizedBox(height: 12),
               const Center(
                 child: Text(
-                  'SafeAlert v1.0.0 Stable Build',
+                  'Alert Me v1.0.0 Stable Build',
                   style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
                 ),
               ),

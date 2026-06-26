@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'feed_screen.dart';
-import 'report_screen.dart';
-import 'settings_screen.dart'; // Import Phase 4 Screen
+import 'home_screen.dart';
+import 'settings_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -13,18 +12,17 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
 
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const SettingsScreen(),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      FeedScreen(onNavigateToReport: () => setState(() => _currentIndex = 1)),
-      const ReportScreen(),
-      const SettingsScreen(), // Replaced the final mock view with our live settings component
-    ];
-
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: screens,
+        children: _screens,
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -39,8 +37,7 @@ class _MainLayoutState extends State<MainLayout> {
           type: BottomNavigationBarType.fixed,
           onTap: (index) => setState(() => _currentIndex = index),
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.shield_outlined), label: 'Feed'),
-            BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: 'Report'),
+            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Settings'),
           ],
         ),

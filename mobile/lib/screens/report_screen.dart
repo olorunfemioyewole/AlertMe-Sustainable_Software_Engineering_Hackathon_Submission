@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_client.dart';
 import '../models/incident_report.dart';
+import '../screens/home_screen.dart'; // To update the localized report state list
 import '../theme.dart';
 import 'success_screen.dart';
 
@@ -17,7 +18,7 @@ class ReportScreen extends ConsumerStatefulWidget {
 class _ReportScreenState extends ConsumerState<ReportScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedType;
-  final _locationController = TextEditingController();
+  final _descriptionController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -54,32 +55,42 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
 
     try {
       final position = await _getCurrentLocation();
-      final lat = position?.latitude ?? 6.5244; // Fallback to Lagos defaults if blocked
+      final lat = position?.latitude ?? 6.5244;
       final lng = position?.longitude ?? 3.3792;
 
       final dio = ref.read(apiClientProvider);
 
       final reportData = IncidentReportRequest(
         incidentType: _selectedType!,
-        location: _locationController.text.trim(),
         latitude: lat,
         longitude: lng,
-        phoneOrUserId: '+2348012345678', // Placeholder matching test profile limits
+        description: _descriptionController.text.trim(),
       );
 
-      // Hit FastAPI mobile_api gateway incident router
       final response = await dio.post('/incidents/report', data: reportData.toJson());
 
       if (mounted) {
         final parsedResponse = IncidentReportResponse.fromJson(response.data);
+
+        // Push cleanly into home list tracking model
+        ref.read(userSubmittedReportsProvider.notifier).update((state) => [
+          ...state,
+          {
+            'type': _selectedType,
+            'location': 'GPS: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}',
+            'ref': parsedResponse.referenceCode,
+            'status': parsedResponse.status
+          }
+        ]);
+
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => SuccessScreen(referenceCode: parsedResponse.referenceCode),
           ),
         );
-        // Clear form on success
-        _locationController.clear();
+
+        _descriptionController.clear();
         setState(() => _selectedType = null);
       }
     } on DioException catch (e) {
@@ -98,6 +109,10 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
         title: const Text('Report Incident', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600)),
         backgroundColor: AppTheme.background,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.text),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -106,12 +121,11 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Emergency Type', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 14)),
+              const Text('Emergency Type', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 14)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _selectedType,
                 hint: const Text('Select anomaly category'),
-                decoration: const InputDecoration(),
                 items: _incidentTypes.map((type) {
                   return DropdownMenuItem(value: type, child: Text(type));
                 }).toList(),
@@ -119,11 +133,12 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                 validator: (val) => val == null ? 'Field required' : null,
               ),
               const SizedBox(height: 20),
-              Text('Area / Landmark / LGA Description', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 14)),
+              const Text('Description / Situation Details', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 14)),
               const SizedBox(height: 8),
               TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(hintText: 'e.g. Yaba Market, Lagos'),
+                controller: _descriptionController,
+                maxLines: 4,
+                decoration: const InputDecoration(hintText: 'Provide critical observations, vehicle plates or description here...'),
                 validator: (val) => val == null || val.isEmpty ? 'Field required' : null,
               ),
               const SizedBox(height: 32),

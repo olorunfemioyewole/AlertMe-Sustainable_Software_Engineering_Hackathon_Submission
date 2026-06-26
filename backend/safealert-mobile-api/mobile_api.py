@@ -206,18 +206,28 @@ app.add_middleware(
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
-    return JSONResponse(
+    response = JSONResponse(
         status_code=429,
         content={"detail": "Too many incident reports. Limit is 5 per hour."},
     )
+    # Explicitly add CORS headers to prevent the browser from masking the error
+    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 
 @app.exception_handler(Exception)
 async def generic_handler(request: Request, exc: Exception):
-    return JSONResponse(
+    # Print the real error to your backend terminal terminal so you can read what failed!
+    print(f"CRITICAL BACKEND EXCEPTION: {str(exc)}")
+    
+    response = JSONResponse(
         status_code=500,
-        content={"detail": "An unexpected error occurred"},
+        content={"detail": f"An unexpected error occurred: {str(exc)}"},
     )
+    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 # ── Auth routes ───────────────────────────────────────────────────────────────
 
@@ -266,11 +276,17 @@ async def report_incident(
     body: IncidentReportRequest,
     current_user: dict = Depends(get_current_user),
 ):
+    # Map fields explicitly to satisfy what the core engine schema expects
     engine_payload = {
         **body.model_dump(),
         "user_id": current_user["id"],
         "phone_number": current_user.get("phone_number"),
         "credibility_weight": current_user["credibility_weight"],
+        
+        # ── Fixes for the Core Engine Validation Errors ──
+        "phone_or_user_id": current_user["id"],  # Satisfies 'phone_or_user_id' requirement
+        "location": f"GPS: {body.latitude}, {body.longitude}",  # Satisfies 'location' requirement
+        "source": "mobile"  # Satisfies 'source' requirement
     }
 
     async with httpx.AsyncClient() as client:
