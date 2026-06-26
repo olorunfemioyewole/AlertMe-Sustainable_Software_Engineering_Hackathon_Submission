@@ -82,8 +82,7 @@ def init_db() -> None:
         c.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id                 TEXT PRIMARY KEY,
-                email              TEXT UNIQUE NOT NULL,
-                phone_number       TEXT,
+                phone_number       TEXT UNIQUE NOT NULL,
                 hashed_password    TEXT NOT NULL,
                 credibility_weight REAL    DEFAULT 1.0,
                 report_count       INTEGER DEFAULT 0,
@@ -98,9 +97,9 @@ def _row_to_dict(row) -> Optional[dict]:
     return dict(row) if row else None
 
 
-def db_get_user_by_email(email: str) -> Optional[dict]:
+def db_get_user_by_phone(phone_number: str) -> Optional[dict]:
     with _conn() as c:
-        row = c.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        row = c.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,)).fetchone()
     return _row_to_dict(row)
 
 
@@ -110,13 +109,13 @@ def db_get_user_by_id(user_id: str) -> Optional[dict]:
     return _row_to_dict(row)
 
 
-def db_create_user(email: str, phone_number: str, hashed_password: str) -> dict:
+def db_create_user(phone_number: str, hashed_password: str) -> dict:
     user_id = str(uuid.uuid4())
     created_at = datetime.utcnow().isoformat()
     with _conn() as c:
         c.execute(
-            "INSERT INTO users (id, email, phone_number, hashed_password, created_at) VALUES (?,?,?,?,?)",
-            (user_id, email, phone_number, hashed_password, created_at),
+            "INSERT INTO users (id, phone_number, hashed_password, created_at) VALUES (?,?,?,?)",
+            (user_id, phone_number, hashed_password, created_at),
         )
         c.commit()
     return db_get_user_by_id(user_id)
@@ -163,13 +162,12 @@ async def get_current_user(
 # ── Pydantic schemas ──────────────────────────────────────────────────────────
 
 class RegisterRequest(BaseModel):
-    email: str
     phone_number: str
     password: str
 
 
 class LoginRequest(BaseModel):
-    email: str
+    phone_number: str
     password: str
 
 
@@ -223,27 +221,25 @@ async def generic_handler(request: Request, exc: Exception):
 
 @app.post("/auth/register", status_code=status.HTTP_201_CREATED)
 async def register(body: RegisterRequest):
-    if db_get_user_by_email(body.email):
-        raise HTTPException(status_code=400, detail="Email already registered")
+    if db_get_user_by_phone(body.phone_number):
+        raise HTTPException(status_code=400, detail="Phone number already registered")
     hashed = pwd_context.hash(body.password)
-    user = db_create_user(body.email, body.phone_number, hashed)
+    user = db_create_user(body.phone_number, hashed)
     return {
         "token": create_access_token(user["id"]),
         "user_id": user["id"],
-        "email": user["email"],
         "phone_number": user["phone_number"],
     }
 
 
 @app.post("/auth/login")
 async def login(body: LoginRequest):
-    user = db_get_user_by_email(body.email)
+    user = db_get_user_by_phone(body.phone_number)
     if not user or not pwd_context.verify(body.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return {
         "token": create_access_token(user["id"]),
         "user_id": user["id"],
-        "email": user["email"],
         "phone_number": user["phone_number"],
         "credibility_weight": user["credibility_weight"],
     }
@@ -266,10 +262,18 @@ async def report_incident(
     body: IncidentReportRequest,
     current_user: dict = Depends(get_current_user),
 ):
+    # 1. Fallback or reverse geocode for the required 'location' string field
+    # (Since the mobile app sends raw coordinates, we can format them or give a fallback)
+    location_string = f"{body.latitude}, {body.longitude}" 
+
+    # 2. Map fields to exactly what the core engine schema mandates
     engine_payload = {
-        **body.model_dump(),
-        "user_id": current_user["id"],
-        "phone_number": current_user.get("phone_number"),
+        "incident_type": body.incident_type,
+        "description": body.description,
+        "photo_url": body.photo_url,
+        "phone_or_user_id": current_user.get("phone_number") or current_user["id"], # Required by engine
+        "location": location_string,                                               # Required by engine
+        "source": "mobile",                                                        # Required by engine
         "credibility_weight": current_user["credibility_weight"],
     }
 
@@ -294,7 +298,7 @@ async def report_incident(
     data = resp.json()
     return {
         "ref_code": data.get("ref_code"),
-        "status": data.get("status", "pending"),
+        "status": data.get("status", "Under Review"), 
     }
 
 
