@@ -23,10 +23,10 @@ export default function MapView({ incidents, selectedIncidentId, onSelectInciden
     <div className="h-full w-full flex relative bg-controlBg overflow-hidden">
       
       {/* LEFT AREA: FULL SCREEN TACTICAL GRID MAP VIEW */}
-      <div className="flex-1 bg-slate-100 relative flex items-center justify-center overflow-hidden">
-        {/* Tactical grid background effect lines */}
-        <div className="absolute inset-0 opacity-[0.5] bg-[linear-gradient(to_right,#E2E8F0_1px,transparent_1px),linear-gradient(to_bottom,#E2E8F0_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#E03616_2px,transparent_2px)] bg-[size:20px_20px]"></div>
+      <div className="flex-1 bg-controlBg relative flex items-center justify-center overflow-hidden">
+        {/* Tactical grid background effect lines mapped over light mode canvas */}
+        <div className="absolute inset-0 opacity-[0.6] bg-[linear-gradient(to_right,#E2E8F0_1px,transparent_1px),linear-gradient(to_bottom,#E2E8F0_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        <div className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(#E03616_2px,transparent_2px)] bg-[size:20px_20px]"></div>
 
         {/* HUD Map Floating Info Box */}
         <div className="absolute top-4 left-4 bg-controlCard border border-controlBorder rounded-xl p-4 shadow-sm z-10 max-w-xs backdrop-blur-sm">
@@ -116,14 +116,16 @@ export default function MapView({ incidents, selectedIncidentId, onSelectInciden
 
             <div>
               <span className="text-[10px] uppercase font-bold text-controlMuted tracking-wider block mb-1">Location Context</span>
-              <p className="text-controlText font-bold pl-1">{selectedIncident.locationName}</p>
+              <p className="text-controlText font-bold bg-controlBg px-2 py-1.5 rounded border border-controlBorder">
+                {selectedIncident.locationName}
+              </p>
             </div>
 
             <div>
-              <span className="text-[10px] uppercase font-bold text-controlMuted tracking-wider block mb-1">Situation Log</span>
-              <p className="text-slate-800 bg-controlBg p-3 rounded-lg border border-controlBorder leading-relaxed italic font-medium">
+              <span className="text-[10px] uppercase font-bold text-controlMuted tracking-wider block mb-1">Situation Log Description</span>
+              <div className="bg-controlBg p-3 rounded-lg border border-controlBorder text-controlText/90 leading-relaxed font-medium italic">
                 "{selectedIncident.description}"
-              </p>
+              </div>
             </div>
           </div>
         </div>
