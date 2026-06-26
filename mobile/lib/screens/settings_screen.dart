@@ -8,13 +8,13 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Read the active profile state data fields dynamically
     final authState = ref.watch(authProvider);
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text(
-          'System Configurations',
+          'Settings',
           style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 20),
         ),
         backgroundColor: AppTheme.background,
@@ -26,8 +26,8 @@ class SettingsScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Active Session Profile',
+              const Text(
+                'Your Account',
                 style: TextStyle(
                     color: AppTheme.text,
                     fontWeight: FontWeight.w600,
@@ -48,7 +48,7 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Routing Account Email',
+                      'Email',
                       style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
@@ -58,23 +58,13 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Verified Mobile Number',
+                      'Phone number',
                       style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       authState.phoneNumber ?? 'Not Available',
                       style: const TextStyle(color: AppTheme.text, fontSize: 15, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Gateway Environment',
-                      style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Mobile API Port Gateway (8001)',
-                      style: TextStyle(color: AppTheme.text, fontSize: 15, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -93,12 +83,12 @@ class SettingsScreen extends ConsumerWidget {
                   foregroundColor: AppTheme.error,
                   side: const BorderSide(color: AppTheme.borders),
                 ),
-                child: const Text('Logout'),
+                child: const Text('Sign Out'),
               ),
               const SizedBox(height: 12),
               const Center(
                 child: Text(
-                  'Alert Me v1.0.0 Stable Build',
+                  'Alert Me v1.0.0',
                   style: TextStyle(color: AppTheme.secondaryText, fontSize: 12),
                 ),
               ),

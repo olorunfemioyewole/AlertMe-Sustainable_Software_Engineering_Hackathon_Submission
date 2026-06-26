@@ -14,13 +14,17 @@ class SafeAlertApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // ref.watch forces this build method to re-run the instant the auth state updates!
     final authState = ref.watch(authProvider);
 
     return MaterialApp(
-      title: 'SafeAlert',
+      title: 'Alert Me',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      home: authState.isAuthenticated ? const MainLayout() : const LoginScreen(),
+      // The switch happens immediately in memory now without requiring a manual refresh
+      home: authState.isAuthenticated
+          ? const MainLayout()
+          : const LoginScreen(),
     );
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
+import 'notifications_screen.dart';
 import 'report_screen.dart';
 
-// Simple global tracking provider for hackathon mock persistence of submitted reports
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 final userSubmittedReportsProvider = StateProvider<List<Map<String, dynamic>>>((ref) => []);
 
 class HomeScreen extends ConsumerWidget {
@@ -14,16 +14,19 @@ class HomeScreen extends ConsumerWidget {
     final reports = ref.watch(userSubmittedReportsProvider);
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('My Reports', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 20)),
         backgroundColor: AppTheme.background,
         elevation: 0,
+        // Find this section in your lib/screens/home_screen.dart file and swap it:
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: AppTheme.text),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('No new system broadcast notifications.')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotificationsScreen()),
               );
             },
           )
@@ -38,20 +41,25 @@ class HomeScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.assignment_outlined, color: AppTheme.borders, size: 64),
               const SizedBox(height: 16),
-              Text('No Reports Logged', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 18)),
+              Text('Nothing reported yet', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 18)),
               const SizedBox(height: 8),
-              Text('You haven\'t broadcasted any localized incident alerts yet.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+              Text('When you report an incident, it will appear here.', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 24),
-              OutlinedButton(
+              ElevatedButton(
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => const ReportScreen()));
                 },
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppTheme.text),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0, // Keeps it flat and clean matching the minimal UI aesthetic
                 ),
-                child: const Text('File Security Report', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Report an Incident',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                ),
               ),
             ],
           ),
@@ -79,15 +87,25 @@ class HomeScreen extends ConsumerWidget {
                     Text(report['type'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppTheme.text)),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                      child: Text(report['status'].toUpperCase(), style: const TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF18F01).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        report['status'].toString().toLowerCase() == 'pending' ? 'Under Review' : report['status'],
+                        style: const TextStyle(
+                          color: Color(0xFFF18F01),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     )
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(report['location'], style: const TextStyle(color: AppTheme.secondaryText, fontSize: 13)),
                 const SizedBox(height: 12),
-                Text('Ref Code: ${report['ref']}', style: const TextStyle(fontFamily: 'Courier', fontSize: 12, color: AppTheme.secondaryText)),
+                Text('Ref: ${report['ref']}', style: const TextStyle(fontFamily: 'Courier', fontSize: 12, color: AppTheme.secondaryText)),
               ],
             ),
           );

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/api_client.dart';
 import '../models/incident_report.dart';
-import '../screens/home_screen.dart'; // To update the localized report state list
+import '../screens/home_screen.dart';
 import '../theme.dart';
 import 'success_screen.dart';
 
@@ -22,14 +22,21 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Screen 5 updated taxonomy choices mapping
   final List<String> _incidentTypes = [
     'Armed Robbery',
     'Kidnapping',
     'Communal Violence',
-    'Insurgency',
+    'Insurgency / Banditry',
     'Suspicious Activity',
     'Medical Emergency'
   ];
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   Future<Position?> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -72,12 +79,17 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
       if (mounted) {
         final parsedResponse = IncidentReportResponse.fromJson(response.data);
 
-        // Push cleanly into home list tracking model
+        // Reverse Geocode mock template rule (Screen 7 UX constraint)
+        String locationDisplay = "Lagos Island, Lagos";
+        if (position != null) {
+          locationDisplay = "GPS: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}";
+        }
+
         ref.read(userSubmittedReportsProvider.notifier).update((state) => [
           ...state,
           {
             'type': _selectedType,
-            'location': 'GPS: ${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}',
+            'location': locationDisplay,
             'ref': parsedResponse.referenceCode,
             'status': parsedResponse.status
           }
@@ -89,24 +101,22 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
             builder: (context) => SuccessScreen(referenceCode: parsedResponse.referenceCode),
           ),
         );
-
-        _descriptionController.clear();
-        setState(() => _selectedType = null);
       }
     } on DioException catch (e) {
       setState(() {
         _errorMessage = e.response?.data['detail'] ?? 'Submission limited or connection timed out.';
       });
     } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    if (mounted) setState(() => _isLoading = false);
+  }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Report Incident', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600)),
+        title: const Text('Report an Incident', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600)),
         backgroundColor: AppTheme.background,
         elevation: 0,
         leading: IconButton(
@@ -121,11 +131,11 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Emergency Type', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 14)),
+              const Text('What happened?', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 14)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _selectedType,
-                hint: const Text('Select anomaly category'),
+                hint: const Text('Select incident type'),
                 items: _incidentTypes.map((type) {
                   return DropdownMenuItem(value: type, child: Text(type));
                 }).toList(),
@@ -133,12 +143,14 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                 validator: (val) => val == null ? 'Field required' : null,
               ),
               const SizedBox(height: 20),
-              const Text('Description / Situation Details', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 14)),
+              const Text('Describe what you saw', style: TextStyle(color: AppTheme.text, fontWeight: FontWeight.w600, fontSize: 14)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _descriptionController,
-                maxLines: 4,
-                decoration: const InputDecoration(hintText: 'Provide critical observations, vehicle plates or description here...'),
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  hintText: 'Any details help — what did you see, hear, or notice? Include vehicle plates, clothing, or anything unusual.',
+                ),
                 validator: (val) => val == null || val.isEmpty ? 'Field required' : null,
               ),
               const SizedBox(height: 32),
@@ -151,7 +163,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
                 child: _isLoading
                     ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Broadcast Alert Now', style: TextStyle(color: Colors.white)),
+                    : const Text('Submit Report', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
